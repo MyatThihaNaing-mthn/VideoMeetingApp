@@ -3,6 +3,9 @@ const constraints = {
     'audio' : true
 };
 
+const attendeVideo = document.querySelector("video#video-attende-view");
+
+
 //socket connection
 const socket = new WebSocket('ws://localhost:3000');
 const config = {'iceServers': [{
@@ -28,6 +31,16 @@ const peerConnection = new RTCPeerConnection(config);
 peerConnection.addTransceiver('audio');
 peerConnection.addTransceiver('video');
 
+//add remote track to attende video view
+peerConnection.addEventListener('track', async (track) => {
+    console.log("track events");
+    const [remoteStream] = track.streams;
+    attendeVideo.srcObject = remoteStream;
+    console.log("adding remote stream to ", attendeVideo);
+});
+
+startMeeting();
+
 peerConnection.addEventListener('icecandidate', event => {
     if(event.candidate){
         //send ice candidate to the websocket server
@@ -35,6 +48,9 @@ peerConnection.addEventListener('icecandidate', event => {
         socket.send(JSON.stringify({'iceCandidate': event.candidate}));
     }
 });
+
+
+
 
 // p2p conn established
 peerConnection.addEventListener('connectionstatechange', event => {
@@ -54,15 +70,14 @@ peerConnection.addEventListener('icegatheringstatechange', () => {
 
 
 
+
 //connection opened
 socket.addEventListener('open', () => {
     console.log("socket connection opened");
-    makeCall();
 });
 
 //listen message from server
 socket.addEventListener('message', async (message)=> {
-    console.log("Message from server", message.data);
     const parsedMessage = JSON.parse(message.data);
     //check the message is an OFFER or an ANSWER
     if(parsedMessage.answer){
@@ -70,6 +85,7 @@ socket.addEventListener('message', async (message)=> {
         await peerConnection.setRemoteDescription(remoteDesc);
         console.log("received answer..");
         console.log("connection " ,peerConnection.getStats);
+        
     }
     else if(parsedMessage.offer){
         peerConnection.setRemoteDescription(new RTCSessionDescription(parsedMessage.offer));
@@ -100,33 +116,36 @@ socket.addEventListener('close', () => {
 
 
 
+function startMeeting(){
+    const selfView = document.querySelector('video#video-self-view');
 
-
-const selfView = document.querySelector('video#video-self-view');
-console.log(selfView);
-
-navigator.mediaDevices.getUserMedia(constraints)
-    .then(stream => {
-        console.log("Got mediastream", stream);
-        selfView.srcObject = stream;
-        selfView.addEventListener('loadedmetadata', () => {
-            // Flip the video horizontally
-            selfView.style.transform = 'scaleX(-1)';
+    navigator.mediaDevices.getUserMedia(constraints)
+        .then(stream => {
+            selfView.srcObject = stream;
+            selfView.addEventListener('loadedmetadata', () => {
+                // Flip the video horizontally
+                selfView.style.transform = 'scaleX(-1)';
+            });
+            //add tracks to peer connection
+            stream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, stream);
+                console.log("adding tracks");
+            });
+            
+        }).then(()=> {
+            makeCall();
+        })
+        .catch(error => {
+            console.log("Error accessing media devices", error);
         });
-
-
-        //add tracks to peer connection
-        stream.getTracks().forEach(track => {
-            peerConnection.addTrack(track, stream);
-        });
-    })
-    .catch(error => {
-        console.log("Error accessing media devices", error);
-    });
+}
 
 //make an offer
 async function makeCall(){
-    const offer = await peerConnection.createOffer();
+    const offer = await peerConnection.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
+    });
     await peerConnection.setLocalDescription(offer);
     socket.send(JSON.stringify({'offer': offer}));
 }

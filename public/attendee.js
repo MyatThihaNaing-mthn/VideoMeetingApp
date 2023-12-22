@@ -1,4 +1,12 @@
-// to notify the wsServer to send offer 
+//host view
+const hostVideo = document.querySelector("video#host-video");
+const selfView = document.querySelector('video#attende-video');
+// video 
+const constraints = {
+    'video' : true,
+    'audio' : true
+};
+
 
 //socket connection
 const socket = new WebSocket('ws://localhost:3000');
@@ -24,8 +32,18 @@ const config = {'iceServers': [{
 
 const peerConnection = new RTCPeerConnection(config);
 
-peerConnection.addTransceiver('audio');
-peerConnection.addTransceiver('video');
+// peerConnection.addTransceiver('audio');
+// peerConnection.addTransceiver('video');
+
+
+peerConnection.addEventListener('track', async (track) => {
+    const [remoteStream] = track.streams;
+    hostVideo.srcObject = remoteStream;
+    console.log("adding stream to ", hostVideo);
+});
+
+
+
 
 // send candidate to the signal server
 peerConnection.addEventListener('icecandidate', event => {
@@ -53,6 +71,7 @@ peerConnection.addEventListener('icegatheringstatechange', () => {
 
 
 
+
 //connection opened
 socket.addEventListener('open', () => {
     console.log("socket connection opened");
@@ -63,7 +82,6 @@ socket.addEventListener('open', () => {
 socket.addEventListener('message', async (message)=> {
 
     const parsedMessage = JSON.parse(message.data);
-    console.log(" offer Message from server", parsedMessage.offer);
     //check the message is an OFFER or an ANSWER
     if(parsedMessage.answer){
         const remoteDesc = new RTCSessionDescription(parsedMessage.answer);
@@ -71,15 +89,38 @@ socket.addEventListener('message', async (message)=> {
         console.log("received answer..")
     }
     else if(parsedMessage.offer){
-        peerConnection.setRemoteDescription(new RTCSessionDescription(parsedMessage.offer));
-        console.log("received offer..");
-        
-        peerConnection.createAnswer().then(answer => {
-            peerConnection.setLocalDescription(answer);
-            socket.send(JSON.stringify({"answer": answer}));
-        }).catch(error => {
-            console.log(error);
+        //adding track before accepting offer
+        navigator.mediaDevices.getUserMedia(constraints)
+        .then(stream => {
+            console.log("Got mediastream", stream);
+            selfView.srcObject = stream;
+            selfView.addEventListener('loadedmetadata', () => {
+                // Flip the video horizontally
+                selfView.style.transform = 'scaleX(-1)';
+            });
+
+            //add tracks to peer connection
+            stream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, stream);
+                console.log("adding tracks");
+            });
+        }).then(()=> {
+            peerConnection.setRemoteDescription(new RTCSessionDescription(parsedMessage.offer));
+            console.log("received offer..");
+            
+            peerConnection.createAnswer({offerToReceiveAudio: true,
+                                        offerToReceiveVideo: true})
+                                        .then(answer => {
+                peerConnection.setLocalDescription(answer);
+                socket.send(JSON.stringify({"answer": answer}));
+            }).catch(error => {
+                console.log(error);
+            });
         })
+        .catch(error => {
+            console.log("Error accessing media devices", error);
+        });
+        
 
     }else if(parsedMessage.iceCandidate){
         //add incoming ice candidate to the peer connection
@@ -102,31 +143,28 @@ socket.addEventListener('close', () => {
 });
 
 
-// video 
-const constraints = {
-    'video' : true,
-    'audio' : true
-};
 
 
-const selfView = document.querySelector('video#attende-video');
-console.log(selfView);
+function prePareSelfView(){
+    const selfView = document.querySelector('video#attende-video');
 
-navigator.mediaDevices.getUserMedia(constraints)
-    .then(stream => {
-        console.log("Got mediastream", stream);
-        selfView.srcObject = stream;
-        selfView.addEventListener('loadedmetadata', () => {
-            // Flip the video horizontally
-            selfView.style.transform = 'scaleX(-1)';
+    navigator.mediaDevices.getUserMedia(constraints)
+        .then(stream => {
+            console.log("Got mediastream", stream);
+            selfView.srcObject = stream;
+            selfView.addEventListener('loadedmetadata', () => {
+                // Flip the video horizontally
+                selfView.style.transform = 'scaleX(-1)';
+            });
+
+            //add tracks to peer connection
+            stream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, stream);
+                console.log("adding tracks");
+            });
+        })
+        .catch(error => {
+            console.log("Error accessing media devices", error);
         });
-
-        //add tracks to peer connection
-        stream.getTracks().forEach(track => {
-            peerConnection.addTrack(track, stream);
-        });
-    })
-    .catch(error => {
-        console.log("Error accessing media devices", error);
-    });
+}
 
