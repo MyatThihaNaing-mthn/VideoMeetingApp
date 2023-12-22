@@ -1,7 +1,4 @@
-const constraints = {
-    'video' : true,
-    'audio' : true
-};
+// to notify the wsServer to send offer 
 
 //socket connection
 const socket = new WebSocket('ws://localhost:3000');
@@ -24,10 +21,13 @@ const config = {'iceServers': [{
         "stun:stun4.l.google.com:19302",
     ]
 }]};
+
 const peerConnection = new RTCPeerConnection(config);
+
 peerConnection.addTransceiver('audio');
 peerConnection.addTransceiver('video');
 
+// send candidate to the signal server
 peerConnection.addEventListener('icecandidate', event => {
     if(event.candidate){
         //send ice candidate to the websocket server
@@ -39,13 +39,12 @@ peerConnection.addEventListener('icecandidate', event => {
 // p2p conn established
 peerConnection.addEventListener('connectionstatechange', event => {
     if (peerConnection.connectionState === 'connected') {
+        // Peers connected!
         console.log("p2p connected..");
-
 
         //after p2p connection, send a message to signal server to change the number of attendes
         socket.send(JSON.stringify({"peerConnection": 1}));
     }
-
 });
 
 peerConnection.addEventListener('icegatheringstatechange', () => {
@@ -57,28 +56,32 @@ peerConnection.addEventListener('icegatheringstatechange', () => {
 //connection opened
 socket.addEventListener('open', () => {
     console.log("socket connection opened");
-    makeCall();
+    socket.send(JSON.stringify({'join': '12345678'}));
 });
 
 //listen message from server
 socket.addEventListener('message', async (message)=> {
-    console.log("Message from server", message.data);
+
     const parsedMessage = JSON.parse(message.data);
+    console.log(" offer Message from server", parsedMessage.offer);
     //check the message is an OFFER or an ANSWER
     if(parsedMessage.answer){
         const remoteDesc = new RTCSessionDescription(parsedMessage.answer);
         await peerConnection.setRemoteDescription(remoteDesc);
-        console.log("received answer..");
-        console.log("connection " ,peerConnection.getStats);
+        console.log("received answer..")
     }
     else if(parsedMessage.offer){
         peerConnection.setRemoteDescription(new RTCSessionDescription(parsedMessage.offer));
         console.log("received offer..");
-        const answer = peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(answer);
-        socket.send(JSON.stringify({"answer": answer}));
-    }
-    else if(parsedMessage.iceCandidate){
+        
+        peerConnection.createAnswer().then(answer => {
+            peerConnection.setLocalDescription(answer);
+            socket.send(JSON.stringify({"answer": answer}));
+        }).catch(error => {
+            console.log(error);
+        })
+
+    }else if(parsedMessage.iceCandidate){
         //add incoming ice candidate to the peer connection
         console.log("new Candidate came...");
         try{
@@ -99,10 +102,14 @@ socket.addEventListener('close', () => {
 });
 
 
+// video 
+const constraints = {
+    'video' : true,
+    'audio' : true
+};
 
 
-
-const selfView = document.querySelector('video#video-self-view');
+const selfView = document.querySelector('video#attende-video');
 console.log(selfView);
 
 navigator.mediaDevices.getUserMedia(constraints)
@@ -114,7 +121,6 @@ navigator.mediaDevices.getUserMedia(constraints)
             selfView.style.transform = 'scaleX(-1)';
         });
 
-
         //add tracks to peer connection
         stream.getTracks().forEach(track => {
             peerConnection.addTrack(track, stream);
@@ -123,11 +129,4 @@ navigator.mediaDevices.getUserMedia(constraints)
     .catch(error => {
         console.log("Error accessing media devices", error);
     });
-
-//make an offer
-async function makeCall(){
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
-    socket.send(JSON.stringify({'offer': offer}));
-}
 
