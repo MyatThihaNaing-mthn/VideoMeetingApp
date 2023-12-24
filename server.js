@@ -7,10 +7,14 @@ const { WebSocket } = require('ws');
 const app = express();
 const bodyParser = require('body-parser');
 const { off } = require('process');
+const {initDb, dbCursor} = require('./utils/databaseUtils');
 
 
 const server = http.createServer(app);
 const wsServer = new WebSocket.Server({server: server});
+
+//connect to db before staring server
+startServer();
 
 // using object for a single meeting
 const meeting = {};
@@ -92,4 +96,13 @@ wsServer.on('connection', ws => {
 });
 
 
-server.listen(3000);
+async function startServer(){
+    try{
+        await initDb();
+        console.log("start server after init db....");
+        server.listen(3000);
+    }catch{
+        console.error("Error starting server..");
+        process.exit(1);
+    }
+}

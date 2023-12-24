@@ -167,4 +167,3 @@ function prePareSelfView(){
             console.log("Error accessing media devices", error);
         });
 }
-
