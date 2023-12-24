@@ -5,7 +5,7 @@ const constraints = {
 
 const attendeVideo = document.querySelector("video#video-attende-view");
 
-
+console.log("userId", getUserId());
 //socket connection
 const socket = new WebSocket('ws://localhost:3000');
 const config = {'iceServers': [{
@@ -147,6 +147,16 @@ async function makeCall(){
         offerToReceiveVideo: true
     });
     await peerConnection.setLocalDescription(offer);
-    socket.send(JSON.stringify({'offer': offer}));
+    socket.send(JSON.stringify({'offer': {'offerSDP': offer, 'hostId': getUserId()}}));
+}
+
+function getUserId(){
+    const userIdInput = document.getElementById("userId");
+    console.log(userIdInput);
+    if(userIdInput){
+        return userIdInput.value;
+    }else{
+        return -1;
+    }   
 }
 

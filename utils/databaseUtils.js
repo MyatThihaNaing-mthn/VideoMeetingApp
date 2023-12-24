@@ -25,11 +25,13 @@ async function initDB() {
     }
 }
 
-function getCursor(){
+function getdb(){
     return dbInstance;
 }
 
+
+
 module.exports = {
     "initDb" : initDB,
-    "getCursor" : getCursor
+    "db" : getdb
 }
