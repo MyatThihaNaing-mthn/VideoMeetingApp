@@ -18,15 +18,23 @@ router.get('/meeting/join', (req, res)=> {
 
 router.post('/meeting/join', (req, res) => {
     console.log("Join meeting post request");
-    const {meetingId, passcode} = req.body;
-    console.log(meetingId, passcode);
+    let {meetingId, passcode} = req.body;
     // Define an asynchronous function to use await
     const handleJoinMeeting = async () => {
         try {
-            const meetingExists = await meetingExist(Number(meetingId), Number(passcode));
+            meetingId = Number(meetingId);
+            passcode = Number(passcode);
+            console.log(typeof meetingId, meetingId);
+            console.log(typeof passcode, passcode);
+            const meeting = await meetingExist(meetingId, passcode);
 
-            if (meetingExists) {
+            if (meeting) {
                 // Redirect to the meeting page, which will establish a WebSocket connection
+                const attendeId = uuidv4();
+                meeting.attendeId = attendeId;
+                // will catch on redirected route
+                req.session.attendeId = attendeId;
+                await db().collection(collectionName).updateOne({meetingId, passcode}, {$set: meeting});
                 res.redirect(`/meeting/${meetingId}`);
             } else {
                 res.status(404).send("No meeting found");
@@ -41,8 +49,10 @@ router.post('/meeting/join', (req, res) => {
 });
 
 router.get('/meeting/:meetingId', (req, res) => {
-    console.log("with id", req.params.meetingId);
-    res.sendFile(path.join(__dirname, '../', 'views', 'attendee_meeting_view.html'));
+    console.log("with attendeid", req.session.attendeId);
+    const attendeId = req.session.attendeId;
+    const meetingId = req.params.meetingId;
+    res.render('attendee_meeting_view', {attendeId: attendeId, meetingId: meetingId});
 });
 
 
@@ -53,12 +63,12 @@ async function meetingExist(meetingId, passcode) {
         const meeting = await db().collection(collectionName).findOne({ meetingId, passcode });
         if (meeting) {
             console.log("found meeting");
-            return true;
+            return meeting;
         } else {
-            return false;
+            return null;
         }
     } catch (error) {
         console.error("Error checking if meeting exists:", error);
-        return false; // Handle the error and return false
+        return null; // Handle the error and return false
     }
 }

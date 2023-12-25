@@ -2,6 +2,7 @@ const constraints = {
     'video' : true,
     'audio' : true
 };
+let meetingId;
 
 const attendeVideo = document.querySelector("video#video-attende-view");
 
@@ -45,7 +46,7 @@ peerConnection.addEventListener('icecandidate', event => {
     if(event.candidate){
         //send ice candidate to the websocket server
         console.log("new Candidate found...");
-        socket.send(JSON.stringify({'iceCandidate': event.candidate}));
+        socket.send(JSON.stringify({'iceCandidate': {'candidate': event.candidate, 'meetingId': meetingId}}));
     }
 });
 
@@ -59,7 +60,7 @@ peerConnection.addEventListener('connectionstatechange', event => {
 
 
         //after p2p connection, send a message to signal server to change the number of attendes
-        socket.send(JSON.stringify({"peerConnection": 1}));
+        socket.send(JSON.stringify({"peerConnection": meetingId}));
     }
 
 });
@@ -107,7 +108,12 @@ socket.addEventListener('message', async (message)=> {
         //received count and change video grid
         console.log("Total attendee :", parsedMessage.totalAttende);
     }
+    else if(parsedMessage.MeetingCreated){
+        console.log("meeting Id: ", parsedMessage.MeetingCreated);
+        meetingId = parsedMessage.MeetingCreated;
+    }
 });
+
 
 //connection closed
 socket.addEventListener('close', () => {

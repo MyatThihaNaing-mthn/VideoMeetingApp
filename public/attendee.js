@@ -50,7 +50,7 @@ peerConnection.addEventListener('icecandidate', event => {
     if(event.candidate){
         //send ice candidate to the websocket server
         console.log("new Candidate found...");
-        socket.send(JSON.stringify({'iceCandidate': event.candidate}));
+        socket.send(JSON.stringify({'iceCandidate': {'candidate': event.candidate, 'meetingId': getMeetingId()}}));
     }
 });
 
@@ -61,7 +61,7 @@ peerConnection.addEventListener('connectionstatechange', event => {
         console.log("p2p connected..");
 
         //after p2p connection, send a message to signal server to change the number of attendes
-        socket.send(JSON.stringify({"peerConnection": 1}));
+        socket.send(JSON.stringify({"peerConnection": getMeetingId()}));
     }
 });
 
@@ -75,7 +75,8 @@ peerConnection.addEventListener('icegatheringstatechange', () => {
 //connection opened
 socket.addEventListener('open', () => {
     console.log("socket connection opened");
-    socket.send(JSON.stringify({'join': '12345678'}));
+    console.log(getAttendeId());
+    socket.send(JSON.stringify({'join': {'attendeId' : getAttendeId(), 'meetingId': getMeetingId()}}));
 });
 
 //listen message from server
@@ -112,7 +113,7 @@ socket.addEventListener('message', async (message)=> {
                                         offerToReceiveVideo: true})
                                         .then(answer => {
                 peerConnection.setLocalDescription(answer);
-                socket.send(JSON.stringify({"answer": answer}));
+                socket.send(JSON.stringify({"answer": {"SDPanswer": answer, "meetingId": getMeetingId(), "attendeId": getAttendeId()}}));
             }).catch(error => {
                 console.log(error);
             });
@@ -166,4 +167,24 @@ function prePareSelfView(){
         .catch(error => {
             console.log("Error accessing media devices", error);
         });
+}
+
+function getAttendeId(){
+    const attendeIdInput = document.getElementById("attendeId");
+    console.log(attendeIdInput);
+    if(attendeIdInput){
+        return attendeIdInput.value;
+    }else{
+        return -1;
+    }   
+}
+
+function getMeetingId(){
+    const meetingIdInput = document.getElementById("meetingId");
+    console.log("meetingID from attedejs ", meetingIdInput);
+    if(meetingIdInput){
+        return meetingIdInput.value;
+    }else{
+        return -1;
+    }
 }
