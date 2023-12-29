@@ -1,22 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../public/start_meeting.css" />
     <title>New Meeting</title>
-</head>
-<body>
-    <div id="video-me" style="width: 300px; height : 300px">
-        <input type="hidden" id="userId" value="<%=userId%>"/>
-        <video width="50%" height="50%" id="video-self-view" autoplay playsinline >
-
-        </video>
-        <video width="50%" height="50%" id="video-attende-view" autoplay playsinline >
-
-        </video>
-
+  </head>
+  <body>
+    <div id="video-wrapper">
+      <input type="hidden" id="userId" value="<%=userId%>" />
+      <video
+        id="video-self-view"
+        autoplay
+        playsinline
+      ></video>
+      <video class="hidden"
+        id="video-attende-view"
+        autoplay
+        playsinline
+      ></video>
+    </div>
+    <div id="control-bar">
+      <ul>
+        <li>
+          <button>Share Screen</button>
+        </li>
+        <li>
+          <button>Mute</button>
+        </li>
+        <li>
+          <button>Video</button>
+        </li>
+        <li>
+          <button>End</button>
+        </li>
+      </ul>
     </div>
     <script src="../public/startMeeting.js"></script>
-</body>
+  </body>
 </html>
