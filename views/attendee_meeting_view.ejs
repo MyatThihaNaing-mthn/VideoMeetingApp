@@ -1,24 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../public/start_meeting.css" />
     <title>Meeting</title>
-</head>
-<body>
-    <div id="meetingwrapper" style="width: 70%; height: 80%; box-sizing: border-box;">
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        Web RTC Meeting App
         <input type="hidden" id="attendeId" value="<%=attendeId%>" />
         <input type="hidden" id="meetingId" value="<%=meetingId%>" />
-        <div id="host" style="width: 50%; height: 50%; box-sizing: inherit;">
-            <video id="host-video" width="100%" height="100%" autoplay playinline muted>
-            </video>
+      </header>
+      <div id="main">
+        <div id="host">
+          <video id="video-host-view" autoplay playsinline></video>
         </div>
-        <div id="attende" style="width: 50%; height: 50%; box-sizing: inherit;">
-            <video id="attende-video" width="100%" height="100%" autoplay playinline muted>
-            </video>
+        <div id="attende">
+          <video
+            class="hidden"
+            id="video-attende-view"
+            autoplay
+            playsinline
+          ></video>
         </div>
+      </div>
+      <footer>
+        Footer
+      </footer>
     </div>
     <script src="../public/attendee.js"></script>
-</body>
+  </body>
 </html>

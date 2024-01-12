@@ -1,6 +1,6 @@
 //host view
-const hostVideo = document.querySelector("video#host-video");
-const selfView = document.querySelector('video#attende-video');
+const hostVideo = document.querySelector("video#video-host-view");
+const selfView = document.querySelector('video#video-attende-view');
 // video 
 const constraints = {
     'video' : true,

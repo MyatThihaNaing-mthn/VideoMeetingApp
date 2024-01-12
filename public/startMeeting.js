@@ -123,7 +123,7 @@ socket.addEventListener('close', () => {
 
 
 function startMeeting(){
-    const selfView = document.querySelector('video#video-self-view');
+    const selfView = document.querySelector('video#video-host-view');
 
     navigator.mediaDevices.getUserMedia(constraints)
         .then(stream => {

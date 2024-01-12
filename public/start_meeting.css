@@ -1,3 +1,6 @@
+* {
+    box-sizing: border-box;
+}
 html, body{
     font-family: 'Montserrat', sans-serif;
     font-size: 14px;
@@ -14,7 +17,7 @@ html, body{
     #video-attende-view{
         width: calc(100% - 0.15rem) !important;
         flex: 1;
-        border: 0.15rem solid blanchedalmond;
+        border: 0.15rem solid gray;
         object-fit: cover;
         box-sizing: border-box;
     }
@@ -28,54 +31,29 @@ html, body{
     }
 }
 
-#video-wrapper{
+.wrapper {
+    display: grid;
+    grid-template-rows: 15% 65% 20%;
+    height: 100%;
     width: 100%;
-    height: auto;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
 }
 
-#video-self-view,
-#video-attende-view{
-    height: auto;
-    width: calc(50% - 0.15rem);
-    flex: 1;
-    border: 0.15rem solid blanchedalmond;
-    object-fit: cover;
-    box-sizing: border-box;
-}
-
-#control-bar{
-    background-color: rgb(164, 168, 161);
-}
-
-#control-bar ul{
-    display: flex;
-    list-style: none;
-    height: 5rem;
-    padding: 0;
-    margin-left: 10rem;
-    margin-right: 10rem;
-}
-
-#control-bar li{
-    display: inline-flex;
-    float: left;
-    flex: 1;
-    justify-content: center !important;
-    align-items: center !important;
-}
-
-#control-bar button{
-    text-decoration: none;
-    display: block;
-    padding: 15px;
-    border-radius: 50%;
+header{
     text-align: center;
 }
 
-#control-bar button:hover{
-    cursor: pointer;
+#main {
+    display: grid;
+    width: 100%;
+    max-height: 100%;
+    grid-template-columns: 50% 50%;
+}
+
+
+#video-host-view,
+#video-attende-view{
+    height: 100%;
+    width: 100%;
+    max-height: 100%;
+    object-fit: cover;
 }
