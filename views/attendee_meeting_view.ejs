@@ -15,16 +15,8 @@
         <input type="hidden" id="meetingId" value="<%=meetingId%>" />
       </header>
       <div id="main">
-        <div id="host">
-          <video id="video-host-view" autoplay playsinline></video>
-        </div>
-        <div id="attende">
-          <video
-            class="hidden"
-            id="video-attende-view"
-            autoplay
-            playsinline
-          ></video>
+        <div id="self" class="video-grid-item">
+          <video id="video-self-view" class="video-view" autoplay playsinline></video>
         </div>
       </div>
       <footer>

@@ -5,6 +5,29 @@ const constraints = {
 let meetingId;
 
 const attendeVideo = document.querySelector("video#video-attende-view");
+let remoteVideo;
+//substitute attetnde video with remote video
+function createRemoteVideo(){
+    const remoteVideoElement = document.createElement('video');
+    remoteVideoElement.setAttribute('autoplay', true);
+    remoteVideoElement.setAttribute('playinline', true);
+    remoteVideoElement.className = "video-view";
+    remoteVideo = remoteVideoElement;
+    
+}
+createRemoteVideo();
+
+function appendRemoteVideo(){
+    const videoDiv = document.createElement('div');
+    videoDiv.className = "video-grid-item";
+    videoDiv.appendChild(remoteVideo);
+    const mainGrid = document.querySelector("div#main");
+    
+    if(mainGrid){
+        mainGrid.appendChild(videoDiv);
+    }
+}
+
 
 console.log("userId", getUserId());
 //socket connection
@@ -32,13 +55,6 @@ const peerConnection = new RTCPeerConnection(config);
 peerConnection.addTransceiver('audio');
 peerConnection.addTransceiver('video');
 
-//add remote track to attende video view
-peerConnection.addEventListener('track', async (track) => {
-    console.log("track events");
-    const [remoteStream] = track.streams;
-    attendeVideo.srcObject = remoteStream;
-    console.log("adding remote stream to ", attendeVideo);
-});
 
 startMeeting();
 
@@ -57,13 +73,21 @@ peerConnection.addEventListener('icecandidate', event => {
 peerConnection.addEventListener('connectionstatechange', event => {
     if (peerConnection.connectionState === 'connected') {
         console.log("p2p connected..");
-
-
+        appendRemoteVideo();
         //after p2p connection, send a message to signal server to change the number of attendes
         socket.send(JSON.stringify({"peerConnection": meetingId}));
     }
 
 });
+
+//add remote track to attende video view
+peerConnection.addEventListener('track', async (track) => {
+    console.log("track events");
+    const [remoteStream] = track.streams;
+    remoteVideo.srcObject = remoteStream;
+    console.log("adding remote stream to ", remoteVideo);
+});
+
 
 peerConnection.addEventListener('icegatheringstatechange', () => {
     console.log('ICE Gathering State:', peerConnection.iceGatheringState);
@@ -123,7 +147,7 @@ socket.addEventListener('close', () => {
 
 
 function startMeeting(){
-    const selfView = document.querySelector('video#video-host-view');
+    const selfView = document.querySelector('video#video-self-view');
 
     navigator.mediaDevices.getUserMedia(constraints)
         .then(stream => {

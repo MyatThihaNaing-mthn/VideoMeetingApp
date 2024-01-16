@@ -1,11 +1,33 @@
-//host view
-const hostVideo = document.querySelector("video#video-host-view");
-const selfView = document.querySelector('video#video-attende-view');
+
+const selfView = document.querySelector('video#video-self-view');
 // video 
 const constraints = {
     'video' : true,
     'audio' : true
 };
+
+let remoteVideo;
+//substitute attetnde video with remote video
+function createRemoteVideo(){
+    const remoteVideoElement = document.createElement('video');
+    remoteVideoElement.setAttribute('autoplay', true);
+    remoteVideoElement.setAttribute('playinline', true);
+    remoteVideoElement.className = "video-view";
+    remoteVideo = remoteVideoElement;
+    
+}
+createRemoteVideo();
+
+function appendRemoteVideo(){
+    const videoDiv = document.createElement('div');
+    videoDiv.className = "video-grid-item";
+    videoDiv.appendChild(remoteVideo);
+    const mainGrid = document.querySelector("div#main");
+    
+    if(mainGrid){
+        mainGrid.appendChild(videoDiv);
+    }
+}
 
 
 //socket connection
@@ -38,8 +60,8 @@ const peerConnection = new RTCPeerConnection(config);
 
 peerConnection.addEventListener('track', async (track) => {
     const [remoteStream] = track.streams;
-    hostVideo.srcObject = remoteStream;
-    console.log("adding stream to ", hostVideo);
+    remoteVideo.srcObject = remoteStream;
+    console.log("adding stream to ", remoteVideo);
 });
 
 
@@ -59,7 +81,7 @@ peerConnection.addEventListener('connectionstatechange', event => {
     if (peerConnection.connectionState === 'connected') {
         // Peers connected!
         console.log("p2p connected..");
-
+        appendRemoteVideo();
         //after p2p connection, send a message to signal server to change the number of attendes
         socket.send(JSON.stringify({"peerConnection": getMeetingId()}));
     }
@@ -147,7 +169,7 @@ socket.addEventListener('close', () => {
 
 
 function prePareSelfView(){
-    const selfView = document.querySelector('video#attende-video');
+    const selfView = document.querySelector('video#video-self-view');
 
     navigator.mediaDevices.getUserMedia(constraints)
         .then(stream => {
