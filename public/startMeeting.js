@@ -2,7 +2,10 @@ const constraints = {
     'video' : true,
     'audio' : true
 };
-let meetingId;
+let meeting = {
+    meetingId: "",
+    passcode: ""
+}
 
 const attendeVideo = document.querySelector("video#video-attende-view");
 let remoteVideo;
@@ -26,6 +29,13 @@ function appendRemoteVideo(){
     if(mainGrid){
         mainGrid.appendChild(videoDiv);
     }
+}
+
+function updateMeetingInfo(id, passcode){
+    let meetingIdTxt = document.getElementById("meeting-id");
+    let meetingPasscode = document.getElementById("meeting-passcode");
+    meetingIdTxt.innerHTML = "Meeting ID: " +id;
+    meetingPasscode.innerHTML = "Meeting Passcode "+passcode;
 }
 
 
@@ -62,7 +72,7 @@ peerConnection.addEventListener('icecandidate', event => {
     if(event.candidate){
         //send ice candidate to the websocket server
         console.log("new Candidate found...");
-        socket.send(JSON.stringify({'iceCandidate': {'candidate': event.candidate, 'meetingId': meetingId}}));
+        socket.send(JSON.stringify({'iceCandidate': {'candidate': event.candidate, 'meetingId': meeting.meetingId}}));
     }
 });
 
@@ -134,7 +144,11 @@ socket.addEventListener('message', async (message)=> {
     }
     else if(parsedMessage.MeetingCreated){
         console.log("meeting Id: ", parsedMessage.MeetingCreated);
-        meetingId = parsedMessage.MeetingCreated;
+        let meeting = parsedMessage.MeetingCreated;
+
+        meeting.meetingId = parsedMessage.MeetingCreated.meetingId;
+        meeting.passcode = parsedMessage.MeetingCreated.passcode;
+        updateMeetingInfo(meeting.meetingId, meeting.passcode);
     }
 });
 
@@ -188,5 +202,29 @@ function getUserId(){
     }else{
         return -1;
     }   
+}
+
+
+/**
+ * To add click handlers
+ */
+
+document.addEventListener("DOMContentLoaded", (event) => {
+    toggleMeetingInfoModal();
+});
+
+function toggleMeetingInfoModal(){
+    let btn = document.getElementById("meeting-info-btn");
+    if(btn){
+        btn.addEventListener("click", (event) => {
+            let dialog = document.getElementById("meeting-modal");
+            if(dialog.style.display === "none"){
+                dialog.style.display = "block";
+            }else{
+                dialog.style.display = "none";
+            }
+
+        })
+    }
 }
 

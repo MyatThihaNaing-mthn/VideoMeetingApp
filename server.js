@@ -67,7 +67,7 @@ wsServer.on('connection', ws => {
                     activeMeetings.push(meetingObj);
                     
                     //send meetingId to the host
-                    ws.send(JSON.stringify({'MeetingCreated': meetingId}));
+                    ws.send(JSON.stringify({'MeetingCreated': {"meetingId": meetingId, "passcode": passcode}}));
                 }catch(e){
                     console.error(e);
                 }
