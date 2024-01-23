@@ -15,6 +15,7 @@ function createRemoteVideo(){
     remoteVideoElement.setAttribute('autoplay', true);
     remoteVideoElement.setAttribute('playinline', true);
     remoteVideoElement.className = "video-view";
+    remoteVideoElement.id = "remote-video-view"
     remoteVideo = remoteVideoElement;
     
 }
@@ -85,7 +86,11 @@ peerConnection.addEventListener('connectionstatechange', event => {
         console.log("p2p connected..");
         appendRemoteVideo();
         //after p2p connection, send a message to signal server to change the number of attendes
-        socket.send(JSON.stringify({"peerConnection": meetingId}));
+        socket.send(JSON.stringify({"peerConnection":meeting.meetingId}));
+    }
+    if(peerConnection.connectionState === 'disconnected'){
+        //handle p2p disconnection
+        handleOnAttendeDisconnect();
     }
 
 });
@@ -211,6 +216,7 @@ function getUserId(){
 
 document.addEventListener("DOMContentLoaded", (event) => {
     toggleMeetingInfoModal();
+    handleEndCall();
 });
 
 function toggleMeetingInfoModal(){
@@ -228,3 +234,23 @@ function toggleMeetingInfoModal(){
     }
 }
 
+
+function handleEndCall(){
+    let endCallBtn = document.getElementById("end-call-btn");
+    if(endCallBtn){
+        endCallBtn.addEventListener("click", ()=> {
+            //remove videos
+            let videoElementArray = document.querySelectorAll(".video-view");
+            videoElementArray.forEach(videoElement => {
+                videoElement.parentNode.removeChild(videoElement);
+            })
+        });
+    }
+}
+
+function handleOnAttendeDisconnect(){
+   if(remoteVideo && remoteVideo.parentNode){
+        let videoContainer = remoteVideo.parentNode;
+        videoContainer.parentNode.removeChild(videoContainer);
+   }
+}
